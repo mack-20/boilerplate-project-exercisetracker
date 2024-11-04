@@ -42,9 +42,9 @@ app.get('/api/users', async (req, res) =>{
   try{
     const users = await User.find({})
 
-    console.log('Uers found: ', users)
+    console.log('Uers found')
 
-    res.json(users)
+    res.send(users)
   }
 
   catch(error){
@@ -52,7 +52,34 @@ app.get('/api/users', async (req, res) =>{
   }
 })
 
+// Set POST route to /api/users/:_id/exercises
+app.post('/api/users/:_id/exercises', async (req, res) => {
+  const user_id = req.params._id
 
+  try{
+    const user = await User.findById(user_id)
+    const {description, duration, date} = req.body
+
+    if(!user){
+      res.send('No user found with this ID')
+    }
+    else{
+      const exerciseDoc = new Exercise({
+        _id: user_id,
+        description,
+        duration,
+        date: date ? new Date(date) : new Date()
+      })
+
+      const exercise = await exerciseDoc.save()
+
+      res.json(exerciseDoc)
+    }
+  }
+  catch(err){
+    console.error(err)
+  } 
+})
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
