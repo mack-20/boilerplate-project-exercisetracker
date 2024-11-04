@@ -65,7 +65,7 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
     }
     else{
       const exerciseDoc = new Exercise({
-        _id: user_id,
+        user_id,
         description,
         duration,
         date: date ? new Date(date) : new Date()
@@ -73,12 +73,36 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
 
       const exercise = await exerciseDoc.save()
 
-      res.json(exerciseDoc)
+      res.json({
+        username: user.username,
+        exercise: exerciseDoc
+      })
     }
   }
   catch(err){
     console.error(err)
   } 
+})
+
+// GET route to retrieve a full exercise log of any user
+app.get('/api/users/:_id/logs', async (req, res) => {
+  const user_id = req.params._id
+
+  const exerciseDocs = await Exercise.find({user_id})
+
+  if(!exerciseDocs){
+    res.send('No exercises found')
+  }
+  else{
+    const exerciseCount = exerciseDocs.length
+    res.json({
+      count: exerciseCount,
+      log: exerciseDocs
+    })
+  }
+  
+
+
 })
 
 const listener = app.listen(process.env.PORT || 3000, () => {
