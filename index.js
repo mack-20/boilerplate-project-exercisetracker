@@ -88,66 +88,48 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
 // GET route to retrieve a full exercise log of any user
 app.get("/api/users/:_id/logs", async (req, res) => {
   const user_id = req.params._id;
-  const exerciseDocs = await Exercise.find({ user_id });
+  const {from, to, limit} = req.query 
   const user = await User.findById(user_id);
-  const exerciseCount = exerciseDocs.length;
+  const filter = {user_id: user_id}
 
+  if(from || to){
+    dateObj = {}
+    if(from){
+      dateObj["$gte"] = new Date(from) 
+    }
+
+    if(to){
+      dateObj["$lte"] = new Date(to)
+    }
+
+    filter.date = dateObj
+    // Debugger Code
+    console.log(filter)
+  }
+
+  else{
+    // Do nothing
+  }
+
+  const exerciseDocs = await Exercise.find(filter).limit(+limit ?? 500)
+  const exerciseCount = exerciseDocs.length
   const log = exerciseDocs.map((exercise) => {
-    return {
-      description: exercise.description,
-      duration: exercise.duration,
-      date: new Date(exercise.date).toDateString(),
-    };
-  });
-
-  res.json({
-    username: user.username,
-    count: exerciseCount,
-    _id: user_id,
-    log: log,
-  });
-});
-
-// GET route to set limit to exercise retrieval
-app.get("/api/users/:_id/logs", async (req, res) => {
-  const { from, to, limit } = req.query;
-  const user_id = req.params._id;
-  const user = await User.findById(user_id);
-
-  // Create filter to obtain filtered search of the database for the exercise within a duration $gte from and $lte to
-  const dateObj = {};
-
-  if (from) {
-    dateObj["$gte"] = new Date(from);
-  }
-  if (to) {
-    dateObj["$lte"] = new Date(to);
-  }
-
-  const filter = {
-    _id: user_id,
-  };
-
-  if (from || to) {
-    filter.date = dateObj;
-  }
-
-  const exerciseDocs = await Exercise.find(filter).limit(+limit ?? 500);
-
-  const log = exerciseDocs.map((exercise) => {
-    return {
+    return{
       description: exercise.description,
       duration: exercise.duration,
       date: new Date(exercise.date).toDateString()
-    };
-  });
+    }
+  })
 
   res.json({
+    _id: user._id,
     username: user.username,
-    count: exerciseDocs.length,
-    _id: user_id,
+    count: exerciseCount,
     log: log
-  });
+  })
+
+
+  
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
