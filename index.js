@@ -44,7 +44,7 @@ app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find({});
 
-    console.log("Uers found");
+    console.log("Users found");
 
     res.send(users);
   } catch (error) {
